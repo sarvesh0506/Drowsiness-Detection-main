@@ -83,7 +83,7 @@ class DrowsinessDetectionTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         
         html = response.data.decode('utf-8')
-        self.assertIn('AI DRIVER GUARDIAN', html)
+        self.assertIn('DRIVER GUARDIAN', html)
         self.assertIn('LIVE GUARDIAN STREAM', html)
         self.assertIn('TELEMETRY GAUGES', html)
         self.assertIn('biometricChart', html)

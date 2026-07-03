@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import threading
@@ -11,8 +12,10 @@ from alarm import AlarmManager
 # MediaPipe Face Mesh
 try:
     import mediapipe as mp
+    from mediapipe.solutions import face_mesh as mp_face_mesh
 except ImportError:
     mp = None
+    mp_face_mesh = None
 
 logger = logging.getLogger(__name__)
 
@@ -75,10 +78,10 @@ class VideoCamera:
         # MediaPipe initialization
         self.mp_face_mesh = None
         self.face_mesh = None
-        if mp:
+        if mp and mp_face_mesh:
             try:
-                self.mp_face_mesh = mp.solutions.face_mesh
-                self.face_mesh = self.mp_face_mesh.FaceMesh(
+                self.mp_face_mesh = mp_face_mesh
+                self.face_mesh = mp_face_mesh.FaceMesh(
                     max_num_faces=1,
                     refine_landmarks=True,
                     min_detection_confidence=0.5,

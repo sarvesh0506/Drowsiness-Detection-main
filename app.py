@@ -1,7 +1,7 @@
 import os
 import logging
 from logging.handlers import RotatingFileHandler
-from flask import Flask, render_template, Response, jsonify, request, url_safe_get_jwt_header
+from flask import Flask, render_template, Response, jsonify, request
 from config import get_config
 from camera import VideoCamera
 from alarm import AlarmManager
