@@ -1,0 +1,7 @@
+*.keras
+*.h5
+*.dat
+data/
+debug_image.jpg
+__pycache__/
+.venv/

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DrowsyGuard: Zen Focus</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
+
+</head>
+<body>
+
+    <div id="permission-screen" class="screen active">
+        <div class="permission-box">
+            <h1>Welcome to DrowsyGuard 🦉</h1>
+            <p>To help you stay focused, we need permission to access your camera for **eye-movement monitoring**.</p>
+            <p class="warning-text">Your video data will be processed locally and is **NOT** recorded or shared.</p>
+            <button class="btn primary large" onclick="startMonitoring()">
+                Grant Permission & Start Focus Mode
+            </button>
+        </div>
+    </div>
+
+    <div id="focus-screen" class="screen hidden">
+    <video id="camera-feed" autoplay muted playsinline style="width: 640px; height: 480px;"></video>
+
+    <canvas id="snapshot-canvas"></canvas>
+
+    <div class="timer">FOCUS</div> 
+    <h2 class="status-text">
+        Zen Mode Active <span class="detection-dot"></span>
+    </h2>
+    <p class="instruction">
+        Detection is active. Study well.
+    </p>
+</div>
+    <div id="alert-screen" class="screen hidden">
+        <div class="alert-box">
+            <h1 id="alert-message">😴 Hey there! Looks like you're sleepy.</h1>
+
+            <div id="user-choice">
+                <p>What would you like to do?</p>
+                <button class="btn primary" onclick="handleUserChoice('continue')">I want to continue</button>
+                <button class="btn secondary" onclick="handleUserChoice('break')">Take a Break</button> 
+            </div>
+
+            <div id="break-section" class="hidden">
+                <h2 id="break-prompt">Great! How long of a break do you need?</h2>
+                <select id="break-time">
+                    <option value="5">5 Minutes</option>
+                    <option value="10">10 Minutes</option>
+                    <option value="15">15 Minutes</option>
+                    <option value="20">20 Minutes</option>
+                </select>
+                <button class="btn primary" onclick="startBreakAlarm()">Set Alarm</button>
+                <p id="break-feedback" class="hidden"></p>
+            </div>
+            
+            <div id="challenge-section" class="hidden">
+                <h2 id="challenge-prompt">Quick Puzzle: What is 14 + 7?</h2>
+                <input type="number" id="challenge-input" placeholder="Your Answer" autofocus>
+                <button class="btn primary" onclick="checkAnswer()">Submit</button>
+                <p id="feedback-message" class="hidden"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
