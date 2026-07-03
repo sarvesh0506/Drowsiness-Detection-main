@@ -240,7 +240,7 @@ This application is distributed under the MIT License. See [LICENSE](LICENSE) fo
 ## 📞 Connect & Socials
 
 <div align="left">
-  <a href="https://www.linkedin.com/in/sarveshkumar-s" target="_blank">
+  <a href="https://www.linkedin.com/in/sarveshkumar3005" target="_blank">
     <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn Badge"/>
   </a>
   <a href="mailto:sarveshkumar0506@gmail.com" target="_blank">
