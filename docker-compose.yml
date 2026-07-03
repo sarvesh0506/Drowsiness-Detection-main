@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: driver_guardian_app
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=prod_fallback_secret_key_change_me
+      # Disables OpenCV webcam capturing since Docker usually lacks raw hardware device bindings
+      # Forces clients to stream base64 frames from browser webcam
+      - CAMERA_SOURCE=None
+    volumes:
+      - ./logs:/app/logs
+      - ./models:/app/models
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -3,69 +3,308 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DrowsyGuard: Zen Focus</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-
+    <title>AI Driver Guardian - Drowsiness Detection System</title>
+    
+    <!-- Meta tags for SEO -->
+    <meta name="description" content="Enterprise-grade AI Driver Drowsiness Detection System combining Face Mesh, geometric landmarks (EAR, MAR), Head Pose, and CNN classification.">
+    <meta name="keywords" content="driver drowsiness, computer vision, face mesh, deep learning, driver fatigue, artificial intelligence">
+    
+    <!-- Font Libraries -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- CSS Icons & Styles -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
-
-    <div id="permission-screen" class="screen active">
-        <div class="permission-box">
-            <h1>Welcome to DrowsyGuard 🦉</h1>
-            <p>To help you stay focused, we need permission to access your camera for **eye-movement monitoring**.</p>
-            <p class="warning-text">Your video data will be processed locally and is **NOT** recorded or shared.</p>
-            <button class="btn primary large" onclick="startMonitoring()">
-                Grant Permission & Start Focus Mode
-            </button>
-        </div>
-    </div>
-
-    <div id="focus-screen" class="screen hidden">
-    <video id="camera-feed" autoplay muted playsinline style="width: 640px; height: 480px;"></video>
-
-    <canvas id="snapshot-canvas"></canvas>
-
-    <div class="timer">FOCUS</div> 
-    <h2 class="status-text">
-        Zen Mode Active <span class="detection-dot"></span>
-    </h2>
-    <p class="instruction">
-        Detection is active. Study well.
-    </p>
-</div>
-    <div id="alert-screen" class="screen hidden">
-        <div class="alert-box">
-            <h1 id="alert-message">😴 Hey there! Looks like you're sleepy.</h1>
-
-            <div id="user-choice">
-                <p>What would you like to do?</p>
-                <button class="btn primary" onclick="handleUserChoice('continue')">I want to continue</button>
-                <button class="btn secondary" onclick="handleUserChoice('break')">Take a Break</button> 
+<body class="dark-theme">
+    
+    <div class="glow-bg"></div>
+    
+    <!-- Navbar / Header -->
+    <header class="app-header py-3 px-4 d-flex justify-content-between align-items-center">
+        <div class="logo-area d-flex align-items-center">
+            <div class="logo-icon me-3">
+                <i class="fa-solid fa-eye-slash-solid fa-shield-halved fa-beat" style="--fa-animation-duration: 2s; color: #00e5ff;"></i>
             </div>
-
-            <div id="break-section" class="hidden">
-                <h2 id="break-prompt">Great! How long of a break do you need?</h2>
-                <select id="break-time">
-                    <option value="5">5 Minutes</option>
-                    <option value="10">10 Minutes</option>
-                    <option value="15">15 Minutes</option>
-                    <option value="20">20 Minutes</option>
-                </select>
-                <button class="btn primary" onclick="startBreakAlarm()">Set Alarm</button>
-                <p id="break-feedback" class="hidden"></p>
+            <div>
+                <h1 class="h4 mb-0 text-white font-orbitron font-weight-bold">DRIVER GUARDIAN <span class="badge badge-ai">AI v1.0</span></h1>
+                <p class="text-muted small mb-0 d-none d-sm-block">Real-time driver fatigue monitoring system</p>
+            </div>
+        </div>
+        
+        <div class="control-actions d-flex align-items-center gap-3">
+            <div class="connection-status badge-glass" id="connectionBadge">
+                <span class="status-dot green"></span>
+                <span class="status-text text-uppercase" id="statusModeText">Backend Stream</span>
             </div>
             
-            <div id="challenge-section" class="hidden">
-                <h2 id="challenge-prompt">Quick Puzzle: What is 14 + 7?</h2>
-                <input type="number" id="challenge-input" placeholder="Your Answer" autofocus>
-                <button class="btn primary" onclick="checkAnswer()">Submit</button>
-                <p id="feedback-message" class="hidden"></p>
+            <button class="btn btn-gradient font-orbitron text-sm btn-icon" id="settingsBtn" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                <i class="fa-solid fa-sliders me-1"></i> SETTINGS
+            </button>
+        </div>
+    </header>
+
+    <main class="container-fluid px-4 py-3">
+        <div class="row g-4">
+            
+            <!-- Left Side: Live Feed & Video Controls -->
+            <div class="col-xl-7 col-lg-6 col-12">
+                <div class="glass-card h-100">
+                    <div class="card-header-custom d-flex justify-content-between align-items-center mb-3">
+                        <h2 class="h5 mb-0 text-white font-orbitron"><i class="fa-solid fa-video me-2 text-cyan"></i> LIVE GUARDIAN STREAM</h2>
+                        <div class="btn-group font-orbitron" role="group" aria-label="Streaming Source Select">
+                            <button type="button" class="btn btn-sm btn-outline-cyan active" id="modeBackendBtn">SERVER CAM</button>
+                            <button type="button" class="button-toggle btn btn-sm btn-outline-cyan" id="modeClientBtn">CLIENT WEB_CAM</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Video Canvas Viewport -->
+                    <div class="video-container relative text-center">
+                        <div class="radar-scan"></div>
+                        
+                        <!-- Video elements for different sources -->
+                        <!-- 1. Backend feed (MJPEG streaming) -->
+                        <img id="backendStreamImg" src="{{ url_for('video_feed') }}" alt="AI Camera Stream" class="img-fluid rounded w-100 stream-element" onerror="handleStreamError()">
+                        
+                        <!-- 2. Client feed elements (webcam processed via socket/REST) -->
+                        <video id="clientWebcamVideo" autoplay muted playsinline class="stream-element d-none"></video>
+                        <canvas id="clientProcessedCanvas" class="img-fluid rounded w-100 stream-element d-none"></canvas>
+                        
+                        <!-- Fallback loading card -->
+                        <div id="streamFallback" class="fallback-panel d-none py-5 px-3">
+                            <i class="fa-solid fa-triangle-exclamation text-warning fa-3x mb-3 animate-pulse"></i>
+                            <h4 class="text-white">Camera Connection Unavailable</h4>
+                            <p class="text-muted small max-w-sm mx-auto">Please check permissions, verify webcam connectivity, or try switching the streaming source mode above.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Core Stream Toggle Actions -->
+                    <div class="stream-footer mt-3 d-flex flex-wrap justify-content-between align-items-center gap-3 py-2 px-1">
+                        <div class="d-flex align-items-center gap-3">
+                            <button class="btn btn-glass btn-sm font-orbitron" id="toggleCamBtn">
+                                <i class="fa-solid fa-power-off text-danger me-1"></i> <span id="toggleCamText">STOP CAMERA</span>
+                            </button>
+                            <button class="btn btn-glass btn-sm font-orbitron" id="toggleMuteBtn">
+                                <i class="fa-solid fa-volume-up text-cyan me-1"></i> <span id="toggleMuteText">MUTE BUZZER</span>
+                            </button>
+                        </div>
+                        <div class="text-muted font-orbitron text-sm d-flex gap-3">
+                            <span>FPS: <b class="text-cyan" id="streamFps">--</b></span>
+                            <span>LATENCY: <b class="text-cyan" id="streamLatency">0ms</b></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Side: AI Status Panel & Gauges -->
+            <div class="col-xl-5 col-lg-6 col-12">
+                <div class="d-flex flex-column gap-4 h-100">
+                    
+                    <!-- AI Status Overview Card -->
+                    <div class="glass-card card-glow-normal" id="statusStateCard">
+                        <div class="d-flex justify-content-between align-items-center mb-3 border-bottom-dark pb-2">
+                            <h2 class="h5 mb-0 text-white font-orbitron"><i class="fa-solid fa-brain me-2 text-cyan"></i> SYSTEM PREDICTION</h2>
+                            <span class="badge text-uppercase text-xs" id="statusModelBadge">CNN + EAR</span>
+                        </div>
+                        
+                        <!-- Large Status Glow Display -->
+                        <div class="text-center py-3">
+                            <div class="status-glow-container text-uppercase text-glow font-orbitron" id="statusMainText">
+                                Alert
+                            </div>
+                            <p class="text-muted text-sm mt-2 mb-0" id="statusDescText">Driver shows normal attentive behaviors.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Metrics Circular Gauges Grid -->
+                    <div class="glass-card flex-grow-1">
+                        <h2 class="h6 mb-3 text-muted font-orbitron text-uppercase tracking-wider"><i class="fa-solid fa-gauge me-2 text-cyan"></i> TELEMETRY GAUGES</h2>
+                        
+                        <div class="row text-center align-items-center g-3">
+                            
+                            <!-- Gauge 1: Fatigue Score -->
+                            <div class="col-6">
+                                <div class="gauge-card py-2">
+                                    <div class="circular-progress-container mx-auto">
+                                        <svg viewBox="0 0 100 100" class="gauge-svg">
+                                            <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                                            <circle cx="50" cy="50" r="42" class="gauge-value" id="fatigueGaugeCircle"></circle>
+                                        </svg>
+                                        <div class="gauge-text-overlay font-orbitron">
+                                            <span id="fatigueVal">0</span><span class="small-pct">%</span>
+                                        </div>
+                                    </div>
+                                    <h3 class="h6 text-muted font-orbitron mt-2 mb-0">FATIGUE SCORE</h3>
+                                </div>
+                            </div>
+                            
+                            <!-- Gauge 2: Eye Aspect Ratio (EAR) -->
+                            <div class="col-6">
+                                <div class="gauge-card py-2">
+                                    <div class="circular-progress-container mx-auto">
+                                        <svg viewBox="0 0 100 100" class="gauge-svg">
+                                            <circle cx="50" cy="50" r="42" class="gauge-bg"></circle>
+                                            <circle cx="50" cy="50" r="42" class="gauge-value" id="earGaugeCircle"></circle>
+                                        </svg>
+                                        <div class="gauge-text-overlay font-orbitron">
+                                            <span id="earVal">0.00</span>
+                                        </div>
+                                    </div>
+                                    <h3 class="h6 text-muted font-orbitron mt-2 mb-0">EYE RATIO (EAR)</h3>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Metric Details Grid -->
+                        <div class="row mt-4 pt-3 border-top-dark g-3 font-orbitron text-sm">
+                            <div class="col-6">
+                                <div class="stat-row">
+                                    <span class="text-muted"><i class="fa-solid fa-face-grimace text-purple me-1"></i> Mouth (MAR):</span>
+                                    <span class="text-white font-weight-bold" id="statMar">0.00</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-row">
+                                    <span class="text-muted"><i class="fa-solid fa-arrows-to-eye text-cyan me-1"></i> Blinks Count:</span>
+                                    <span class="text-white font-weight-bold" id="statBlinks">0</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-row">
+                                    <span class="text-muted"><i class="fa-solid fa-chart-line text-cyan me-1"></i> Blink Rate /m:</span>
+                                    <span class="text-white font-weight-bold" id="statBlinkRate">0</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="stat-row">
+                                    <span class="text-muted"><i class="fa-solid fa-clock text-cyan me-1"></i> Yawns Count:</span>
+                                    <span class="text-white font-weight-bold" id="statYawns">0</span>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="stat-row pb-1">
+                                    <span class="text-muted"><i class="fa-solid fa-rotate text-cyan me-1"></i> Head Pose Angle:</span>
+                                    <span class="text-white font-weight-bold" id="statHeadPose">P: 0.0° | Y: 0.0° | R: 0.0°</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4 g-4">
+            
+            <!-- Bottom Left: Analytical Charts -->
+            <div class="col-lg-8 col-12">
+                <div class="glass-card">
+                    <h2 class="h5 mb-3 text-white font-orbitron"><i class="fa-solid fa-chart-area me-2 text-cyan"></i> BIOMETRIC TRACKER HISTORY</h2>
+                    <div style="position: relative; height: 260px;">
+                        <canvas id="biometricChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bottom Right: Live Event Timeline / Logger -->
+            <div class="col-lg-4 col-12">
+                <div class="glass-card d-flex flex-column" style="height: 310px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom-dark">
+                        <h2 class="h5 mb-0 text-white font-orbitron"><i class="fa-solid fa-receipt me-2 text-cyan"></i> AUDIT TIMELINE</h2>
+                        <button class="btn btn-link text-cyan btn-sm text-decoration-none p-0" id="clearLogsBtn">CLEAR</button>
+                    </div>
+                    <div class="timeline-logs flex-grow-1 overflow-auto" id="timelineContainer">
+                        <div class="log-item info">
+                            <span class="log-time font-orbitron">21:20:00</span>
+                            <span class="log-msg">Guardian AI Agent initialized. Model loading started.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-muted border-top-dark mt-5 text-sm font-orbitron">
+        AI-Powered Driver Drowsiness Detection System &copy; 2026. Built with OpenCV, MediaPipe & TensorFlow.
+    </footer>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dark">
+            <div class="modal-content glass-card">
+                <div class="modal-header border-0 pb-0">
+                    <h3 class="modal-title h5 text-white font-orbitron" id="settingsModalLabel">
+                        <i class="fa-solid fa-gear text-cyan me-1"></i> CONFIGURATION PANEL
+                    </h3>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                
+                <div class="modal-body font-orbitron py-4 text-white">
+                    <form id="settingsForm">
+                        
+                        <!-- Row 1: EAR Eye aspect ratio -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="earThresholdRange" class="form-label text-muted">EAR (Eye Aspect Ratio) Threshold</label>
+                                <span class="badge badge-glass text-cyan" id="earThresholdVal">0.25</span>
+                            </div>
+                            <input type="range" class="form-range" min="0.1" max="0.4" step="0.01" id="earThresholdRange">
+                            <div class="form-text text-muted small-text">EAR below this value constitutes eye closure. (Default: 0.25)</div>
+                        </div>
+                        
+                        <!-- Row 2: MAR Mouth aspect ratio -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="marThresholdRange" class="form-label text-muted">MAR (Mouth Aspect Ratio) Yawn</label>
+                                <span class="badge badge-glass text-cyan" id="marThresholdVal">0.65</span>
+                            </div>
+                            <input type="range" class="form-range" min="0.3" max="0.9" step="0.01" id="marThresholdRange">
+                            <div class="form-text text-muted small-text">Mouth open width threshold indicating yawn. (Default: 0.65)</div>
+                        </div>
+                        
+                        <!-- Row 3: Consecutive frames eyes closed -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="closedFramesRange" class="form-label text-muted">Consecutive Closed Frames Alert</label>
+                                <span class="badge badge-glass text-cyan" id="closedFramesVal">15</span>
+                            </div>
+                            <input type="range" class="form-range" min="5" max="60" step="1" id="closedFramesRange">
+                            <div class="form-text text-muted small-text">Number of continuous frames eyes closed to sound buzzer. (Default: 15 frames)</div>
+                        </div>
+
+                        <!-- Row 4: Yawn frames -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label for="yawnFramesRange" class="form-label text-muted">Consecutive Yawn Frames Alert</label>
+                                <span class="badge badge-glass text-cyan" id="yawnFramesVal">25</span>
+                            </div>
+                            <input type="range" class="form-range" min="5" max="60" step="1" id="yawnFramesRange">
+                            <div class="form-text text-muted small-text">Number of continuous frames mouth open to count yawn. (Default: 25 frames)</div>
+                        </div>
+                        
+                        <!-- Row 5: Mute Buzzer Switch -->
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="muteBuzzerSwitch">
+                            <label class="form-check-label text-muted ms-2" for="muteBuzzerSwitch">Mute Alarms & Audio Buzzer</label>
+                        </div>
+                        
+                    </form>
+                </div>
+                
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary font-orbitron" data-bs-dismiss="modal">CLOSE</button>
+                    <button type="button" class="btn btn-gradient font-orbitron" id="saveSettingsBtn">APPLY SETTINGS</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <!-- JS CDN Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
 </html>
